@@ -1,0 +1,23 @@
+[
+    {
+        "display_name": "Dashboard",
+        "route": "/",
+        "icon": "bx bx-category-alt"
+    },
+    {
+        "display_name": "Reclamation",
+        "route": "/reclamation",
+        "icon": "bx bx-user-pin"
+    },
+    {
+        "display_name": "Factures",
+        "route": "/factures",
+        "icon": "bx bx-package"
+    },
+    {
+        "display_name": "Publicité",
+        "route": "/publicite",
+        "icon": "bx bx-bar-chart-alt"
+    }
+
+]

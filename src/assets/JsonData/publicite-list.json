@@ -1,0 +1,9 @@
+[{
+    "id":1,"location":"Ariana esoghra","price":"200","size":"4x4","status":"disponible"
+},{
+    "id":2,"location":"Ben Arous,Rades","price":"500","size":"5x4","status":"indisponible"
+},{
+    "id":3,"location":"Sousse","price":"350","size":"6x2","status":"disponible"
+},{
+    "id":4,"location":"Tozeur","price":"150","size":"4x4","status":"indisponible"
+}]
