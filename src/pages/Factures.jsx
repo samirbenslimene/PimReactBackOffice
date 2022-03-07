@@ -1,11 +1,13 @@
 import React from "react";
 import { useState } from "react";
-import factureslist from "../assets/JsonData/factures-list.json";
 import Badge from "../components/badge/Badge";
 import Table from "../components/table/Table";
+import axios from "axios";
 
 const Factures = () => {
   const [openFactureDetail, setopenFactureDetail] = useState(false);
+  const [dataReady, setdataReady] = useState(false);
+  const [listFactures, setlistFactures] = useState([]);
   const [currentFacture, setcurrentFacture] = useState({
     id: "",
     name: "",
@@ -15,8 +17,9 @@ const Factures = () => {
   });
   const customerTableHead = [
     "",
-    "name",
+    "adress",
     "email",
+    "date",
     "type de paiement",
     "montant",
   ];
@@ -29,21 +32,26 @@ const Factures = () => {
   const renderBody = (item, index) => (
     <tr key={index} onClick={() => openFactureDetailaction(item)}>
       <td>{item.id}</td>
-      <td>{item.name}</td>
+      <td>{item.address}</td>
       <td>{item.email}</td>
+      <td>{item.createdAt}</td>
       <td>
-        <Badge
-          type={rectlamationStatus[item.typefacutres]}
-          content={item.typefacutres}
-        />
+        <Badge type={rectlamationStatus[item.type]} content={item.type} />
       </td>
-      <td>{item.montant}</td>
+      <td>{item.prix}</td>
     </tr>
   );
   const rectlamationStatus = {
     creditcard: "primary",
     crypto: "danger",
   };
+  React.useEffect(async () => {
+    await axios.get("http://localhost:4000/api/facture").then((res) => {
+      console.log(res.data.factures);
+      setlistFactures(res.data.factures);
+      setdataReady(true);
+    });
+  }, []);
   return (
     <div>
       {" "}
@@ -59,12 +67,12 @@ const Factures = () => {
 
               <div className="row">
                 <div className="col-5">
-                  <p>Type of payment : </p>
+                  <p>Type of payment: </p>
                 </div>
                 <div className="col-1">
                   <Badge
-                    type={rectlamationStatus[currentFacture.typefacutres]}
-                    content={currentFacture.typefacutres}
+                    type={rectlamationStatus[currentFacture.type]}
+                    content={currentFacture.type}
                   />
                 </div>
               </div>
@@ -73,24 +81,28 @@ const Factures = () => {
                 <div className="col-5">
                   <p>Montant :</p>
                 </div>
-                <div className="col-1">{currentFacture.montant}</div>
+                <div className="col-1">{currentFacture.prix}</div>
               </div>
               <div className="card_body"></div>
             </div>
           ) : (
             <div></div>
           )}
-          <div className="card">
-            <div className="card__body">
-              <Table
-                limit="10"
-                headData={customerTableHead}
-                renderHead={(item, index) => renderHead(item, index)}
-                bodyData={factureslist}
-                renderBody={(item, index) => renderBody(item, index)}
-              />
+          {dataReady ? (
+            <div className="card">
+              <div className="card__body">
+                <Table
+                  limit="10"
+                  headData={customerTableHead}
+                  renderHead={(item, index) => renderHead(item, index)}
+                  bodyData={listFactures}
+                  renderBody={(item, index) => renderBody(item, index)}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div></div>
+          )}
         </div>
       </div>
     </div>

@@ -1,30 +1,72 @@
 import React from "react";
 import { useState } from "react";
-import publist from "../assets/JsonData/publicite-list.json";
 import Badge from "../components/badge/Badge";
 import Table from "../components/table/Table";
+import axios from "axios";
+
 const Publicite = () => {
   const [openadd, setopenadd] = useState(false);
   const [opendetail, setopendetail] = useState(false);
+  const [dataReady, setdataReady] = useState(false);
+  const [listPub, setlistPub] = useState([]);
+  const [pubToAdd, setpubToAdd] = useState({
+    location: "",
+    size: "",
+    price: "",
+    description: "",
+  });
   const [currentPub, setcurrentPub] = useState({
     id: "",
-    location: "",
+    name: "",
     price: "",
     size: "",
+    description: "",
     status: "",
   });
+  const addToBD = () => {
+    console.log(pubToAdd);
+    axios
+      .post("http://localhost:4000/api/publicite", {
+        name: pubToAdd.location,
+        description: pubToAdd.description,
+        price: pubToAdd.price,
+        size: pubToAdd.size,
+      })
+      .then(async (res) => {
+        if (res.status == 201) {
+          closeAddPub();
+          setpubToAdd({});
+          setdataReady(false);
+
+          await setlistPub((listPub) => [...listPub, res.data["publicite"]]);
+          setdataReady(true);
+        }
+      });
+  };
+  React.useEffect(async () => {
+    await axios.get("http://localhost:4000/api/publicite").then((res) => {
+      setlistPub(res.data["publicites"]);
+      setdataReady(true);
+    });
+  }, []);
   const pubTableHead = ["", "location", "price", "size", "status"];
   const renderHead = (item, index) => <th key={index}>{item}</th>;
   const renderBody = (item, index) => (
     <tr key={index} onClick={() => openpubdetail(item)}>
-      <td>{item.id}</td>
-      <td>{item.location}</td>
+      <td>{item._id}</td>
+      <td>{item.name}</td>
       <td>{item.price}</td>
       <td>{item.size}</td>
+      {item.status ? (
+        <td>
+          <Badge type={pubStatus["indisponible"]} content="indisponible" />
+        </td>
+      ) : (
+        <td>
+          <Badge type={pubStatus["disponible"]} content="disponible" />
+        </td>
+      )}
 
-      <td>
-        <Badge type={pubStatus[item.status]} content={item.status} />
-      </td>
       <td>{item.montant}</td>
     </tr>
   );
@@ -32,6 +74,7 @@ const Publicite = () => {
     disponible: "primary",
     indisponible: "danger",
   };
+
   const openpubdetail = (pub) => {
     setopendetail(false);
     setcurrentPub(pub);
@@ -42,6 +85,41 @@ const Publicite = () => {
   };
   const closeAddPub = () => {
     setopenadd(false);
+  };
+  const louer = async () => {
+    await axios
+      .put("http://localhost:4000/api/publicite", currentPub)
+      .then(async (res) => {
+        setcurrentPub((prev) => ({
+          id: prev.id,
+          name: prev.name,
+          size: prev.size,
+          price: prev.price,
+          description: prev.description,
+          status: true,
+        }));
+        window.location.reload(false);
+      });
+  };
+  const deleteAll = () => {
+    axios.delete("http://localhost:4000/api/publicite/all").then((res) => {
+      window.location.reload(false);
+    });
+  };
+  const makedispo = () => {
+    axios
+      .put("http://localhost:4000/api/publicite/dispo", currentPub)
+      .then(async (res) => {
+        setcurrentPub((prev) => ({
+          id: prev.id,
+          name: prev.name,
+          size: prev.size,
+          price: prev.price,
+          description: prev.description,
+          status: false,
+        }));
+        window.location.reload(false);
+      });
   };
   return (
     <div>
@@ -64,6 +142,12 @@ const Publicite = () => {
                     {" "}
                     <input
                       className="input"
+                      value={pubToAdd.location}
+                      onChange={(e) =>
+                        setpubToAdd((prev) => ({
+                          location: e.target.value,
+                        }))
+                      }
                       type="text"
                       placeholder="location ..."
                     />
@@ -76,7 +160,33 @@ const Publicite = () => {
                     <input
                       className="input"
                       type="text"
+                      value={pubToAdd.price}
+                      onChange={(e) =>
+                        setpubToAdd((prev) => ({
+                          location: prev.location,
+                          price: e.target.value,
+                        }))
+                      }
                       placeholder="price ..."
+                    />
+                  </div>
+                  <label>Puclicite description</label>
+                  <br />
+                  <br />
+                  <div className="col-10">
+                    {" "}
+                    <input
+                      placeholder="description ..."
+                      className="input"
+                      type="text"
+                      value={pubToAdd.description}
+                      onChange={(e) =>
+                        setpubToAdd((prev) => ({
+                          location: prev.location,
+                          price: prev.price,
+                          description: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <label>Puclicite size</label>
@@ -87,6 +197,15 @@ const Publicite = () => {
                     <input
                       className="input"
                       type="text"
+                      value={pubToAdd.size}
+                      onChange={(e) =>
+                        setpubToAdd((prev) => ({
+                          location: prev.location,
+                          price: prev.price,
+                          description: prev.description,
+                          size: e.target.value,
+                        }))
+                      }
                       placeholder=" 4*4..."
                     />
                   </div>
@@ -95,7 +214,7 @@ const Publicite = () => {
                   <div className="row">
                     <div className="col-3">
                       {" "}
-                      <button className="button col-8" onClick={closeAddPub}>
+                      <button className="button col-8" onClick={addToBD}>
                         submit
                       </button>
                     </div>
@@ -112,17 +231,25 @@ const Publicite = () => {
               <div></div>
             )}
             {opendetail ? (
-              <div className="card col-6">
+              <div className="card col-8">
                 <div className="card_body">
-                  <div className="col-10">
+                  <div className="col-12">
                     <div className="row">
                       <div className="col-8">
                         {" "}
                         <p>Location :</p>
-                        <h3>{currentPub.location}</h3>
+                        <h3>{currentPub.name}</h3>
                       </div>
                       <div className="col-4">
-                        <button className="button col-10">Edit</button>
+                        {currentPub.status ? (
+                          <button className="button col-10" onClick={makedispo}>
+                            make disponible
+                          </button>
+                        ) : (
+                          <button className="button col-8" onClick={louer}>
+                            Louer
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -132,30 +259,50 @@ const Publicite = () => {
                   <p className="col-6">Size :</p>
                   <h4 className="col-6">{currentPub.size}</h4>
                   <p className="col-6">Status :</p>
-                  <br />
-                  <br />
                   <div className="col-6">
-                    <Badge
-                      type={pubStatus[currentPub.status]}
-                      content={currentPub.status}
-                    />
+                    {currentPub.status ? (
+                      <td>
+                        <Badge
+                          type={pubStatus["indisponible"]}
+                          content="indisponible"
+                        />
+                      </td>
+                    ) : (
+                      <td>
+                        <Badge
+                          type={pubStatus["disponible"]}
+                          content="disponible"
+                        />
+                      </td>
+                    )}
                   </div>
                 </div>
               </div>
             ) : (
               <div></div>
             )}
-            <div className="card">
-              <div className="card__body">
-                <Table
-                  limit="10"
-                  headData={pubTableHead}
-                  renderHead={(item, index) => renderHead(item, index)}
-                  bodyData={publist}
-                  renderBody={(item, index) => renderBody(item, index)}
-                />
+            {dataReady ? (
+              <div className="card">
+                <div className="row">
+                  <div className="col-9"></div>
+                  <button className="button col-2" onClick={deleteAll}>
+                    clear all
+                  </button>
+                </div>
+
+                <div className="card__body">
+                  <Table
+                    limit="10"
+                    headData={pubTableHead}
+                    renderHead={(item, index) => renderHead(item, index)}
+                    bodyData={listPub}
+                    renderBody={(item, index) => renderBody(item, index)}
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div></div>
+            )}
           </div>
         </div>
       </div>
