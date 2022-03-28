@@ -1,27 +1,29 @@
 import React from "react";
 
 import Table from "../components/table/Table";
+import { useHistory } from "react-router-dom";
 
-import customerList from "../assets/JsonData/reclamation-list.json";
 import Badge from "../components/badge/Badge";
 import { useState } from "react";
+import axios from "axios";
 
 const Reclamations = () => {
+  if (localStorage.getItem("id") === null) {
+    //check condition
+    history.push("/login");
+  }
   const [openReply, setopenReply] = useState(false);
   const [doReply, setdoReply] = useState(false);
+  const [dataReady, setdataReady] = useState(false);
+  const [listReclamation, setlistReclamation] = useState([]);
+  const [replyContent, setreplyContent] = useState("");
   const [cuurentRecalamtaion, setcuurentRecalamtaion] = useState({
     name: "",
     email: "",
     content: "",
     status: false,
   });
-  const customerTableHead = [
-    "",
-    "name",
-    "email",
-    "Reclamation Content",
-    "status",
-  ];
+  const customerTableHead = ["name", "email", "Reclamation Content", "status"];
   const doReplyAction = () => {
     setdoReply(true);
   };
@@ -35,7 +37,6 @@ const Reclamations = () => {
   };
   const renderBody = (item, index) => (
     <tr key={index} onClick={() => replytoreclamation(item)}>
-      <td>{item.id}</td>
       <td>{item.name}</td>
       <td>{item.email}</td>
       <td>{item.content}</td>
@@ -52,9 +53,29 @@ const Reclamations = () => {
     true: "primary",
     false: "danger",
   };
+  const reply = () => {
+    console.log(replyContent);
+    axios
+      .put("http://localhost:4000/api/reclamation/", {
+        _id: cuurentRecalamtaion._id,
+        reply: replyContent,
+      })
+      .then(() => {
+        window.location.reload(false);
+      });
+  };
   const closereplysection = () => {
     setdoReply(false);
   };
+  const history = useHistory();
+
+  React.useEffect(() => {
+    axios.get("http://localhost:4000/api/reclamation/").then((res) => {
+      console.log(res.data.reclamations);
+      setlistReclamation(res.data.reclamations);
+      setdataReady(true);
+    });
+  }, []);
   return (
     <div>
       <h2 className="page-header">Reclamation list :</h2>
@@ -89,7 +110,10 @@ const Reclamations = () => {
 
                 <p>Relacamtion content :{cuurentRecalamtaion.content}</p>
                 {cuurentRecalamtaion.status ? (
-                  <div></div>
+                  <div>
+                    <h3>admin reply :</h3>
+                    <p>{cuurentRecalamtaion.reply}</p>
+                  </div>
                 ) : (
                   <div>
                     <br />
@@ -109,6 +133,10 @@ const Reclamations = () => {
                             <div className="col-10">
                               {" "}
                               <input
+                                value={replyContent}
+                                onChange={(e) =>
+                                  setreplyContent(e.target.value)
+                                }
                                 className="input"
                                 type="text"
                                 placeholder="Reply ..."
@@ -122,7 +150,7 @@ const Reclamations = () => {
                                 {" "}
                                 <button
                                   className="button col-8"
-                                  onClick={closereplysection}
+                                  onClick={reply}
                                 >
                                   submit
                                 </button>
@@ -150,18 +178,21 @@ const Reclamations = () => {
           ) : (
             <div></div>
           )}
-
-          <div className="card">
-            <div className="card__body">
-              <Table
-                limit="10"
-                headData={customerTableHead}
-                renderHead={(item, index) => renderHead(item, index)}
-                bodyData={customerList}
-                renderBody={(item, index) => renderBody(item, index)}
-              />
+          {dataReady ? (
+            <div className="card">
+              <div className="card__body">
+                <Table
+                  limit="10"
+                  headData={customerTableHead}
+                  renderHead={(item, index) => renderHead(item, index)}
+                  bodyData={listReclamation}
+                  renderBody={(item, index) => renderBody(item, index)}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div></div>
+          )}
         </div>
       </div>
     </div>

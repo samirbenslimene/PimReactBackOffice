@@ -18,6 +18,11 @@
         "display_name": "Publicité",
         "route": "/publicite",
         "icon": "bx bx-bar-chart-alt"
+    },
+    {
+        "display_name": "Profile",
+        "route": "/profile",
+        "icon": "bx bx-user-pin"
     }
 
 ]
